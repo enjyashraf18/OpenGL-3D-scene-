@@ -8,6 +8,88 @@ static float cameraDistance = -5.0; // Start the camera closer to the scene
 
 const int window_width = 800;
 const int window_height = 600;
+static float legAngle = 0.0;
+
+
+void drawHuman() {
+    glPushMatrix();
+
+    // Position of the human
+    glTranslatef(0.0, -0.8, -0.9);
+    glRotatef(Zangle, 0.0, 0.0, 1.0);
+    glRotatef(Yangle, 0.0, 1.0, 0.0);
+    glRotatef(Xangle, 1.0, 0.0, 0.0);
+
+    // head
+    glColor3f(1.0, 0.87, 0.68);
+    glPushMatrix();
+    //glRotatef(70.0, 0.0, 1.0, 0.0);
+    glTranslatef(0.0, 1.03, 0.0);
+    glutSolidSphere(0.13, 20, 20);
+    glPopMatrix();
+
+    // body (just a rectangle)
+    glColor3f(1.0, 1.0, 0.0); // yellow shirt
+    glPushMatrix();
+    //glRotatef(70.0, 0.0, 1.0, 0.0);
+    glTranslatef(0.0, 0.6, 0.0);
+    glScalef(0.35, 0.6, 0.1);
+    glutSolidCube(1.0);
+    glPopMatrix();
+
+    // left arm
+    glColor3f(1.0, 0.87, 0.68);
+    glPushMatrix();
+    //glRotatef(70.0, 0.0, 1.0, 0.0);
+    glTranslatef(0.0, 5.0, 0.0);
+    glRotatef(-legAngle, 1.0, 0.0, 0.0);
+    glTranslatef(0.0, -5.0, 0.0);
+
+    glTranslatef(-0.225, 0.67, 0.0);
+    glScalef(0.075, 0.45, 0.05);
+    glutSolidCube(1.0);
+    glPopMatrix();
+
+    //right arm
+    glPushMatrix();
+    //glRotatef(70.0, 0.0, 1.0, 0.0);
+    glTranslatef(0.0, 5.0, 0.0);
+    glRotatef(legAngle, 1.0, 0.0, 0.0);
+    glTranslatef(0.0, -5.0, 0.0);
+
+    glTranslatef(0.225, 0.67, 0.0);
+    glScalef(0.075, 0.45, 0.05);
+    glutSolidCube(1.0);
+    glPopMatrix();
+
+    //left leg
+    glColor3f(0.0, 0.0, 0.0); // Black pants
+    glPushMatrix();
+    //glRotatef(70.0, 0.0, 1.0, 0.0);
+    glTranslatef(0.0, -5.0, 0.0);
+    glRotatef(legAngle, 1.0, 0.0, 0.0);
+    glTranslatef(0.0, 5.0, 0.0);
+
+    glTranslatef(-0.07, 0.08, 0.0);
+    glScalef(0.08, 0.5, 0.05);
+    glutSolidCube(1.0);
+    glPopMatrix();
+
+    // right leg
+    glPushMatrix();
+    //glRotatef(70.0, 0.0, 1.0, 0.0);
+    glTranslatef(0.0, -5.0, 0.0);
+    glRotatef(-legAngle, 1.0, 0.0, 0.0);
+    glTranslatef(0.0, 5.0, 0.0);
+
+    glTranslatef(0.07, 0.08, 0.0);
+    glScalef(0.08, 0.5, 0.05);
+    glutSolidCube(1.0);
+    glPopMatrix();
+
+    glPopMatrix();
+}
+
 
 
 void drawScene()
@@ -78,6 +160,8 @@ void drawScene()
     glVertex3f(-1.0, 1.0, -1.0);
     glEnd();
     glPopMatrix();
+
+    drawHuman();
 
     glutSwapBuffers();  // Swap buffers for double buffering
 }
