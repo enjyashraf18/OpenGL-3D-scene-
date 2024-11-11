@@ -17,6 +17,13 @@ static float cameraDistance = -5.0; // Start the camera closer to the scene
 int lastTime = 0;  // Store the last time when the scene started
 bool isPlaying = true;  // Control the scene playback state
 
+
+// Ball variables
+bool isThrown = false;
+float ballX = 0, ballY = 0., ballZ = 0.0;
+float ballVelocityX = 0.07,ballVelocityY = 0.025, ballVelocityZ = 0.01;
+float gravity = -0.0008;
+
 const int window_width = 800;
 const int window_height = 600;
 
@@ -25,7 +32,7 @@ void update(int value) {
     int currentTime = glutGet(GLUT_ELAPSED_TIME);
     // body rotation
     if (isPlaying && 500 < currentTime - lastTime && currentTime - lastTime < 1500) {
-        bodyAngle += 0.5f;  
+        bodyAngle += 0.5f;
     }
     if (isPlaying && 2000 < currentTime - lastTime && currentTime - lastTime < 4000) {
         walkBack += 0.01f;
@@ -43,11 +50,38 @@ void update(int value) {
     }
     // hand swing
     if (isPlaying && 4500 < currentTime - lastTime && currentTime - lastTime < 5500) {
-        handSwing += 1.0f;  
+        handSwing += 1.0f;
     }
     // throw the ball
     if (isPlaying && 5600 < currentTime - lastTime && currentTime - lastTime < 6600) {
         throwAngle += 1.0f;
+        if (!isThrown) {
+            isThrown = true;
+            ballX = -1.;
+            ballY = 0.67;
+            
+        }
+    }
+    // Ball physics update if thrown
+    if (isThrown) {
+        // Update position with velocity
+        ballX += ballVelocityX;
+        ballY += ballVelocityY;
+        ballZ += 0;
+
+        // Apply gravity
+        ballVelocityY += gravity;
+        if (ballY < -0.9 ) {
+            ballVelocityX = 0.95 * ballVelocityX; // simulate floor friction
+
+        }
+
+        // Bounce off walls
+        if (ballX > 2 || ballX < -2) ballVelocityX = -0.4*ballVelocityX;
+        if (ballY > 1.5 || ballY < -0.9) ballVelocityY = -0.7*ballVelocityY;
+
+     
+      
     }
     // taking a bow
     if (isPlaying && 7000 < currentTime - lastTime && currentTime - lastTime < 8000) {
@@ -58,7 +92,7 @@ void update(int value) {
 
         if (walkAngle >= 30.0) forward = 1;
         else if (walkAngle <= -30.0) forward = 0;
-        
+
     }
     if (isPlaying && 8000 < currentTime - lastTime && currentTime - lastTime < 9000) {
         rotateAngle += 0.5f;
@@ -69,7 +103,7 @@ void update(int value) {
     if (isPlaying && 11000 < currentTime - lastTime && currentTime - lastTime < 12000) {
         bowAngle -= 0.5f;
     }
-    if (isPlaying && currentTime - lastTime > 120000) {  
+    if (isPlaying && currentTime - lastTime > 120000) {
         isPlaying = false;
         std::cout << "Time is up, press space to restart" << std::endl;
     }
@@ -77,6 +111,12 @@ void update(int value) {
     // Continuously call the timer function
     glutPostRedisplay();
     glutTimerFunc(16, update, 0);  // 16 ms -> ~60 FPS
+}
+// Draw the ball
+void drawBall() {
+    glColor3f(1.0, 0.5, 0.0);  // Orange ball
+    glTranslatef(ballX, ballY, ballZ);
+    glutSolidSphere(0.05, 20, 20);  
 }
 
 void drawHuman() {
@@ -116,20 +156,33 @@ void drawHuman() {
     glPushMatrix();
     glTranslatef(-0.225, 0.67, 0.0);
 
+
+    
+
     // swing
     glTranslatef(0.075 / 2, 0.45 / 2, 0.05 / 2);
-    glRotatef(-3.5*handSwing + 3.5 * throwAngle - walkAngle, 1, 0, 0);
+    glRotatef(-3.5 * handSwing + 3.5 * throwAngle - walkAngle, 1, 0, 0);
     glTranslatef(-0.075 / 2, -0.45 / 2, -0.05 / 2);
-
+    glTranslatef(0, -0.2, 0);
+    if (!isThrown) {
+        drawBall();
+    }
+    glTranslatef(0, 0.2, 0);
+    glColor3f(0.5, 0.25, 0.2);
     glScalef(0.075, 0.45, 0.05);
+
     glutSolidCube(1.0);
     glPopMatrix();
+
+    
 
     //right arm
     glPushMatrix();
     //glRotatef(70.0, 0.0, 1.0, 0.0);
     glTranslatef(0.225, 0.67, 0.0);
-    
+
+
+
     // walking back
     glTranslatef(0.075 / 2, 0.45 / 2, 0.05 / 2);
     glRotatef(walkAngle, 1, 0, 0);
@@ -137,7 +190,11 @@ void drawHuman() {
 
     glScalef(0.075, 0.45, 0.05);
     glutSolidCube(1.0);
+
+
     glPopMatrix();
+
+    
 
     //left leg
     glColor3f(0.0, 0.0, 0.0); // Black pants
@@ -147,7 +204,7 @@ void drawHuman() {
     glTranslatef(0, -0.3, 0);
 
     glTranslatef(-0.07, 0.08, 0.0);
-    
+
     // swing
     glTranslatef(0.08 / 2, 0.5 / 2, 0.05 / 2);
     glRotatef(0.3 * handSwing - 0.3 * throwAngle + walkAngle, 1, 0, 0);
@@ -175,8 +232,12 @@ void drawHuman() {
     glutSolidCube(1.0);
     glPopMatrix();
 
+    
+
     //glPopMatrix();
 }
+
+
 
 void drawRoom() {
     // Draw the floor
@@ -194,10 +255,10 @@ void drawRoom() {
     glPushMatrix();
     glBegin(GL_QUADS);
     glColor3f(0.8, 0.8, 0.8);  // Light gray ceiling
-    glVertex3f(-2, 1.0, -1.0);
-    glVertex3f(2, 1.0, -1.0);
-    glVertex3f(2, 1.0, 1.0);
-    glVertex3f(-2, 1.0, 1.0);
+    glVertex3f(-2, 1.5, -1.0);
+    glVertex3f(2, 1.5, -1.0);
+    glVertex3f(2, 1.5, 1.0);
+    glVertex3f(-2, 1.5, 1.0);
     glEnd();
     glPopMatrix();
 
@@ -208,8 +269,8 @@ void drawRoom() {
     glColor3f(0.2, 0.2, 0.6);  // Blue left wall
     glVertex3f(-2, -1.0, -1.0);
     glVertex3f(-2, -1.0, 1.0);
-    glVertex3f(-2, 1.0, 1.0);
-    glVertex3f(-2, 1.0, -1.0);
+    glVertex3f(-2, 1.5, 1.0);
+    glVertex3f(-2, 1.5, -1.0);
     glEnd();
     glPopMatrix();
 
@@ -219,8 +280,8 @@ void drawRoom() {
     glColor3f(0.6, 0.2, 0.2);  // Red right wall
     glVertex3f(2, -1.0, -1.0);
     glVertex3f(2.0, -1.0, 1.0);
-    glVertex3f(2.0, 1.0, 1.0);
-    glVertex3f(2.0, 1.0, -1.0);
+    glVertex3f(2.0, 1.5, 1.0);
+    glVertex3f(2.0, 1.5, -1.0);
     glEnd();
     glPopMatrix();
 
@@ -230,12 +291,12 @@ void drawRoom() {
     glColor3f(0.2, 0.6, 0.2);  // Green front wall
     glVertex3f(-2, -1.0, -1.0);
     glVertex3f(2, -1.0, -1.0);
-    glVertex3f(2, 1.0, -1.0);
-    glVertex3f(-2, 1.0, -1.0);
+    glVertex3f(2, 1.5, -1.0);
+    glVertex3f(-2, 1.5, -1.0);
     glEnd();
     glPopMatrix();
 }
-    
+
 void drawScene()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clear color and depth buffers
@@ -244,15 +305,21 @@ void drawScene()
     // Translate the camera closer to the room (adjusting the camera distance)
     glTranslatef(0.0, 0.0, cameraDistance);
 
-    
+
     // Apply rotations
     glRotatef(Zangle, 0.0, 0.0, 1.0);
     glRotatef(Yangle, 0.0, 1.0, 0.0);
     glRotatef(Xangle, 1.0, 0.0, 0.0);
 
     drawRoom();
-
+    glPushMatrix();
     drawHuman();
+    glPopMatrix();
+    glPushMatrix();
+    if (isThrown) {
+        drawBall();
+    }
+    glPopMatrix();
 
     glutSwapBuffers();  // Swap buffers for double buffering
 }
@@ -346,6 +413,9 @@ void keyInput(unsigned char key, int x, int y)
         rotateAngle = 0.0f;
         walkForward = 0.0f;
         lastTime = glutGet(GLUT_ELAPSED_TIME);
+        isThrown = false;
+        ballX = 0, ballY = 0., ballZ = 0.0;
+        ballVelocityX = 0.07, ballVelocityY = 0.025, ballVelocityZ = 0.01;
         break;
     default:
         break;
